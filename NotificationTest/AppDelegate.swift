@@ -9,12 +9,53 @@
 import UIKit
 
 @UIApplicationMain
-class AppDelegate: UIResponder, UIApplicationDelegate {
+class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterDelegate {
 
+
+    func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse, withCompletionHandler completionHandler: @escaping () -> Void) {
+        
+        print("didReceive: \(response)")
+        
+        completionHandler()
+        
+    }
+    
+    func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification, withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
+        completionHandler([.badge, .sound, .alert])
+    }
 
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         // Override point for customization after application launch.
+        
+        let center = UNUserNotificationCenter.current()
+        
+        center.delegate = self
+        
+        center.requestAuthorization(options: [.alert, .badge, .sound]) { (granted, error) in
+            guard granted else {
+                print("Notification authorization denied")
+                return
+            }
+            print("Notification authorization granted")
+        }
+        
+        let acceptAction = UNNotificationAction(identifier: "ACCEPT_ACTION",
+              title: "Accept",
+              options: UNNotificationActionOptions(rawValue: 0))
+        let declineAction = UNNotificationAction(identifier: "DECLINE_ACTION",
+              title: "Decline",
+              options: UNNotificationActionOptions(rawValue: 0))
+        // Define the notification type
+        let meetingInviteCategory =
+              UNNotificationCategory(identifier: "MEETING_INVITATION",
+              actions: [acceptAction, declineAction],
+              intentIdentifiers: [],
+              hiddenPreviewsBodyPlaceholder: "",
+              options: .customDismissAction)
+        // Register the notification type.
+        center.setNotificationCategories([meetingInviteCategory])
+        
         return true
     }
 
